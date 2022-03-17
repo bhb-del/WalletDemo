@@ -1,13 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
+import UseConnect from "./wallet/connect"
 import reportWebVitals from './reportWebVitals';
+import { Web3ReactProvider } from '@web3-react/core'
+import { Web3Provider } from '@ethersproject/providers'
 
+function getLibrary(provider) {
+  const library = new Web3Provider(provider)
+  library.pollingInterval = 5000
+  return library
+}
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  <Web3ReactProvider getLibrary={getLibrary}>
+    <React.StrictMode>
+      <UseConnect />   
+    </React.StrictMode>
+  </Web3ReactProvider>
+  ,
   document.getElementById('root')
 );
 
