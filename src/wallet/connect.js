@@ -1,8 +1,9 @@
 import { useEffect,useState } from "react";
 import './connect.css'
 import { useWeb3React } from '@web3-react/core'
+import ChooseNetwork from "./network.tsx"
 
-const { ethers } = require("ethers");
+import * as ethers from 'ethers'
 
 function UseConnect() {
     const [balance,setBalance] = useState(0.0);
@@ -17,14 +18,15 @@ function UseConnect() {
        if (typeof window.ethereum === "undefined"){
             alert("请安装MetaMask")
        } else {
-            UseGetAccount();   
+            GetAccount(); 
        }
     }
+
     //2.当检测到未连接钱包时，一进入页面就触发连接钱包 (react)
     useEffect(()=>{connect()},[])
 
     //获取chainId (ethers)
-    async function UseGetChain(){
+    function UseGetChain(){
         provider.getNetwork()
         .then((result)=>{
             handleChainChanged(result.chainId);
@@ -38,16 +40,13 @@ function UseConnect() {
         if (supportedChainIds.includes(chainId)){
             setChains(chainId);
         } else {
-            //bug: 打印多次
-            console.log("this chain hasn't been supported yet.");
-            UseAddChain()
+            alert("this chain hasn't been supported yet.");
         }
-        window.ethereum.removeListener('chainChanged', UseGetChain);
     }
 
     //获取账户地址 (ethers)
-    async function UseGetAccount(){
-        await provider.send("eth_requestAccounts", [])
+    function GetAccount(){
+        provider.send("eth_requestAccounts", [])
         .then(handleAccountsChanged)
         .catch((error) => {
             // If the request fails, the Promise will reject with an error.
@@ -74,15 +73,19 @@ function UseConnect() {
               UseGetChain();
               });
           }
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
     }
-
     // 监听账户变化
-    window.ethereum.on('accountsChanged', handleAccountsChanged)
-    window.ethereum.on('chainChanged',(result)=>{
-        const chain = parseInt(Number(result),10);
-        handleChainChanged(chain)
-    });
+    useEffect(()=>{
+        window.ethereum.on('accountsChanged', handleAccountsChanged)
+        window.ethereum.on('chainChanged',(result)=>{
+            const chain = parseInt(Number(result),10);
+            handleChainChanged(chain)
+        });
+        return ()=>{
+            window.ethereum.removeListener('chainChanged', UseGetChain);
+            window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        }
+    },[])
 
     // 将账户地址格式化为前六后四
     function filter(val) {
@@ -127,6 +130,7 @@ function UseConnect() {
         <p>address: {address}</p>
         <p>balance: {balance}</p>
         <p>chain: {chains_}</p>
+        <ChooseNetwork />
       </div>
     );
 }
