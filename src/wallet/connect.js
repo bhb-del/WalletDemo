@@ -7,7 +7,7 @@ const { ethers } = require("ethers");
 function UseConnect() {
     const [balance,setBalance] = useState(0.0);
     const [address,setAddress] = useState(null);
-    const [chains_,setChains] = useState([{chainId:'',name:''}])
+    const [chains_,setChains] = useState(null);
 
     const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
     const supportedChainIds= [1, 3, 4, 5, 42];
@@ -17,41 +17,42 @@ function UseConnect() {
        if (typeof window.ethereum === "undefined"){
             alert("请安装MetaMask")
        } else {
-            getAccount();   
+            UseGetAccount();   
        }
     }
+    //2.当检测到未连接钱包时，一进入页面就触发连接钱包 (react)
+    useEffect(()=>{connect()},[])
 
     //获取chainId (ethers)
-    function getChain(){
+    async function UseGetChain(){
         provider.getNetwork()
         .then((result)=>{
-            let chains_ = [{
-                chainId: result.chainId,
-                name: result.name,
-            }]
-            if (supportedChainIds.includes(chains_[0].chainId)){
-                setChains(chains_[0]);
-            } else {
-                //bug: 打印多次
-                console.log("chain of " + result.name + " hasn't been supported yet.");
-            }
-            window.ethereum.removeListener('chainChanged', getChain);
+            handleChainChanged(result.chainId);
+        })
+        .catch((error)=>{
+            console.log(error)
         })
     }
 
+    function handleChainChanged(chainId){
+        if (supportedChainIds.includes(chainId)){
+            setChains(chainId);
+        } else {
+            //bug: 打印多次
+            console.log("this chain hasn't been supported yet.");
+        }
+        window.ethereum.removeListener('chainChanged', UseGetChain);
+    }
+
     //获取账户地址 (ethers)
-    async function getAccount(){
+    async function UseGetAccount(){
         await provider.send("eth_requestAccounts", [])
         .then(handleAccountsChanged)
         .catch((error) => {
             // If the request fails, the Promise will reject with an error.
              alert(error.message)
-        });
-        
+        });   
     }
-
-    //2.当检测到未连接钱包时，一进入页面就触发连接钱包 (react)
-    useEffect(()=>{connect()},[])
 
     //检测用户是否锁定了账户 (web3-react) 
     const {deactivate} = useWeb3React()
@@ -60,7 +61,7 @@ function UseConnect() {
             // 无账号，则代表锁定了,主动断开
             deactivate()
             setAddress(null)
-            setChains([{chainId:'',name:''}])
+            setChains(null)
           } else {
               //获取账户余额
               provider.getBalance(accounts[0]).then((result) => {
@@ -69,15 +70,20 @@ function UseConnect() {
               setBalance(etherString)
               //检测账户切换后更新账户地址
               setAddress(accounts[0])
-              getChain();
+              UseGetChain();
               });
           }
         window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
     }
 
+    // 监听账户变化
     window.ethereum.on('accountsChanged', handleAccountsChanged)
-    window.ethereum.on('chainChanged',getChain);
+    window.ethereum.on('chainChanged',(result)=>{
+        const chain = parseInt(Number(result),10);
+        handleChainChanged(chain)
+    });
 
+    // 将账户地址格式化为前六后四
     function filter(val) {
         let len = val.length;
         return val.substring(0,6) + '...' + val.substring(len-4,len);
@@ -88,7 +94,7 @@ function UseConnect() {
         <button onClick={connect}> { address == null ? 'connect': filter(address) }</button>
         <p>address: {address}</p>
         <p>balance: {balance}</p>
-        <p>chain: {chains_.chainId}</p>
+        <p>chain: {chains_}</p>
       </div>
     );
 }
