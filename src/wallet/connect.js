@@ -40,6 +40,7 @@ function UseConnect() {
         } else {
             //bug: 打印多次
             console.log("this chain hasn't been supported yet.");
+            UseAddChain()
         }
         window.ethereum.removeListener('chainChanged', UseGetChain);
     }
@@ -89,6 +90,37 @@ function UseConnect() {
         return val.substring(0,6) + '...' + val.substring(len-4,len);
     }
 
+    // 往用户的账户内添加不存在的网络
+    async function UseAddChain(){
+        try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x61' }],
+            });
+          } catch (switchError) {
+            // This error code indicates that the chain has not been added to MetaMask.
+            if (switchError.code === 4902) {
+              try {
+                await window.ethereum.request({
+                  method: 'wallet_addEthereumChain',
+                  params: [
+                    {
+                      chainId: '0x61',
+                      chainName: 'Binance Smart Chain Testnet',
+                      rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545'],
+                    },
+                  ],
+                });
+              } catch (addError) {
+                // handle "add" error
+                // alert("增加网络失败")
+                console.log("你拒绝了增加该网络...")
+              }
+            }
+            // handle other "switch" errors
+            console.log("switchError")
+          }
+    }
     return (
       <div className="main">
         <button onClick={connect}> { address == null ? 'connect': filter(address) }</button>
