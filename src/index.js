@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import UseConnect from "./wallet/connect"
+import ConnectComponent from "./wallet/connect.tsx";
 import reportWebVitals from './reportWebVitals';
 import { Web3ReactProvider } from '@web3-react/core'
 import { Web3Provider } from '@ethersproject/providers'
@@ -14,7 +14,7 @@ function getLibrary(provider) {
 ReactDOM.render(
   <Web3ReactProvider getLibrary={getLibrary}>
     <React.StrictMode>
-      <UseConnect />   
+      <ConnectComponent />   
     </React.StrictMode>
   </Web3ReactProvider>
   ,
