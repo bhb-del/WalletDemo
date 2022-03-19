@@ -87,7 +87,7 @@ export default () => {
         if (supportedChainIds.includes(chainId)) {
             setChains(chainId);
         } else {
-            console.log("this chain hasn't been supported yet.");
+            alert("this chain hasn't been supported yet.");
         }
     }
 
